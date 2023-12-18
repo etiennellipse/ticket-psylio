@@ -73,4 +73,4 @@ if query := st.chat_input():
     message.write(response)
     message.write("Documents utilisés:")
     for document in documents_used:
-        message.write(f"URL: {document.metadata['url']}")
+        message.write(f"- [{document.metadata['title']}]({document.metadata['url']})")

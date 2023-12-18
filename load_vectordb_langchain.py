@@ -49,7 +49,7 @@ class ScrapedLoader(BaseLoader):
                 document = Document(
                     page_content=item["content"],
                     metadata={
-                        # "title": item["title"],
+                        "title": item["title"],
                         "url": item["url"],
                     },
                 )
