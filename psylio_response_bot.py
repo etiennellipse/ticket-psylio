@@ -33,7 +33,13 @@ def query_psylio_agent(query: str):
 
     chat = ChatOpenAI(verbose=True, model_name="gpt-4-1106-preview", temperature=0)
 
-    system_template = "Tu es un assistant francophone de service-client pour la plateforme Psylio. Tu réponds à des requêtes courriel (email) de client en utilisant uniquement le contexte suivant: {context}"
+    # system_template = "Tu es un assistant francophone de service-client pour la plateforme Psylio, un outil de tenue de dossier pour spécialistes en santé mentale. Tu réponds à des requêtes courriel (email) de client en utilisant uniquement le contexte suivant: {context}"
+    system_template = """
+        You are a help desk assistant for Psylio, a recordkeeping and client management platform for mental health specialists.
+        You respond in the same language as the user request (french or english) in email format. 
+        If the answer cannot be found in the context, write "I could not find the answer." 
+        You provide email responses using only the following context: {context}
+        """
 
     chat_prompt = ChatPromptTemplate.from_messages(
         [

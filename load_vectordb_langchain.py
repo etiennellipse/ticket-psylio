@@ -32,10 +32,13 @@ chroma = Chroma(
 
 
 class ScrapedLoader(BaseLoader):
+    def __init__(self, file_path):
+        self._file_path = file_path
+
     def load(self) -> List[Document]:
         docs = []
 
-        with open("psylio.json", "r") as f:
+        with open(self._file_path, "r") as f:
             json_data = json.load(f)
 
             # remove elements where content is None
@@ -51,6 +54,7 @@ class ScrapedLoader(BaseLoader):
                     metadata={
                         "title": item["title"],
                         "url": item["url"],
+                        "language": item["language"],
                     },
                 )
                 docs.append(document)
@@ -59,22 +63,26 @@ class ScrapedLoader(BaseLoader):
 
 
 def run():
-    scrapedLoader = ScrapedLoader()
-    documents = scrapedLoader.load()
 
-    print(f"Documents loaded: {len(documents)}")
+    for file in ["psylio.json"]:
+        print(f"Loading content from {file}")
 
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=3000,
-        chunk_overlap=200,
-        length_function=len,
-        add_start_index=True,
-    )
-    split_docs = text_splitter.split_documents(documents)
+        scraped_loader = ScrapedLoader(file)
+        documents = scraped_loader.load()
 
-    print(f"Splitd documents: {len(split_docs)}")
+        print(f"Documents loaded: {len(documents)}")
 
-    chroma.add_documents(split_docs)
+        text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=3000,
+            chunk_overlap=200,
+            length_function=len,
+            add_start_index=True,
+        )
+        split_docs = text_splitter.split_documents(documents)
+
+        print(f"Splitd documents: {len(split_docs)}")
+
+        chroma.add_documents(split_docs)
 
 
 if __name__ == "__main__":
