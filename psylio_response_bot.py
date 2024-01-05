@@ -1,4 +1,4 @@
-# PATCH sqlite3 to use pysqlite3
+# PATCH sqlite3 to use pysqlite3 for Streamlit Community deployment
 __import__('pysqlite3')
 import sys
 sys.modules['sqlite3'] = sys.modules['pysqlite3']
@@ -9,18 +9,11 @@ from langchain.chains import RetrievalQA
 from langchain.chat_models import ChatOpenAI
 from langchain.embeddings import OpenAIEmbeddings
 from langchain.prompts import ChatPromptTemplate
-from langchain.schema import BaseOutputParser
 from langchain.vectorstores.chroma import Chroma
 
 import streamlit as st
 
 dotenv.load_dotenv()
-
-
-class TextExtractOutputParser(BaseOutputParser):
-    def parse(self, text: str):
-        return text.strip()
-
 
 def query_psylio_agent(query: str):
     chroma_client = chromadb.PersistentClient("chromadb_psylio_kb")
@@ -33,7 +26,6 @@ def query_psylio_agent(query: str):
 
     chat = ChatOpenAI(verbose=True, model_name="gpt-4-1106-preview", temperature=0)
 
-    # system_template = "Tu es un assistant francophone de service-client pour la plateforme Psylio, un outil de tenue de dossier pour spécialistes en santé mentale. Tu réponds à des requêtes courriel (email) de client en utilisant uniquement le contexte suivant: {context}"
     system_template = """
         You are a help desk assistant for Psylio, a recordkeeping and client management platform for mental health specialists.
         You respond in the same language as the user request (french or english) in email format. 
@@ -56,12 +48,13 @@ def query_psylio_agent(query: str):
 
 
 st.title("Psylio Service-Client Helper")
+st.set_page_config(page_title="Psylio Service-Client Helper")
 
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {
             "role": "assistant",
-            "content": "Salut! Je suis un assistant francophone de service-client pour la plateforme Psylio. Comment puis-je t'aider?",
+            "content": "Salut! Je suis l'assistant de service-client pour Psylio. Comment puis-je t'aider?\n\nTu peux me copier/coller le billet reçu, je tenterai d'y répondre.",
         }
     ]
 
@@ -77,6 +70,10 @@ if query := st.chat_input():
     st.session_state.messages.append({"role": "assistant", "content": response})
     message = st.chat_message("assistant")
     message.write(response)
-    message.write("Documents utilisés:")
-    for document in documents_used:
-        message.write(f"- [{document.metadata['title']}]({document.metadata['url']})")
+
+    if documents_used:
+        message.write("**DOCUMENTS UTILISÉS**:")
+        for document in documents_used:
+            message.write(f"- [{document.metadata['title']}]({document.metadata['url']})")
+    else:
+        message.write("**AUCUN DOCUMENT PERTINENT TROUVÉ DANS LA BASE DE CONNAISSANCES.**")
